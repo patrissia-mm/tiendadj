@@ -7,5 +7,82 @@
 {% endblock css %}
 
 {% block js %}
-
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js';
+    import { GoogleAuthProvider, getAuth, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-auth.js";
+    
+    // TODO: Replace the following with your app's Firebase project configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyA3rT_0Ip-iuumK9lqWY-lrmHIBX2Ktisw",
+        authDomain: "django-pro-c73f8.firebaseapp.com",
+        projectId: "django-pro-c73f8",
+        storageBucket: "django-pro-c73f8.appspot.com",
+        messagingSenderId: "619008126712",
+        appId: "1:619008126712:web:a92c3d072db2bc5e28d50d"
+      };
+    
+    const app = initializeApp(firebaseConfig);
+    //console.log(app)
+    const googleProvider = new GoogleAuthProvider();
+    const auth = getAuth(app);
+    //signInWithRedirect(auth, provider);
+    async function loginRedirectGoogle(){
+      await signInWithRedirect(auth, googleProvider);
+    }
+    
+    /*async function loginDj(idToken){
+      const data = {
+        token_id:idToken
+      }
+    
+      fetch('http://127.0.0.1:8000/api/google-login/',{
+        method: 'POST',
+        headers: {
+          'Content-Type':'application/json'
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(data => console.log(data))
+    }*/
+    
+    getRedirectResult(auth)
+      .then((result) => {
+        // This gives you a Google Access Token. You can use it to access Google APIs.
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        const token = credential.accessToken;
+        // The signed-in user info.
+        const user = result.user;
+        // IdP data available using getAdditionalUserInfo(result)
+        // ...
+        //console.log(credential);
+        //console.log(credential.idToken);
+        //loginDj(credential.idToken);
+        user.getIdToken().then(
+          function(idToken){
+            console.log(idToken);
+            var data = {'token_id':idToken};
+            axios.post('/api/google-login/', data).then(
+              function(response){
+                console.log(response);
+              }
+            )
+          }).catch(function(error){
+            console.error(error.response.data);
+          })
+      }).catch((error) => {
+        // Handle Errors here.
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        // The email of the user's account used.
+        const email = error.customData.email;
+        // The AuthCredential type that was used.
+        const credential = GoogleAuthProvider.credentialFromError(error.response.data);
+        // ...
+      });
+      //loginDj(credential.idToken);
+    
+    window.loginRedirectGoogle = loginRedirectGoogle
+    </script>
 {% endblock js %}
